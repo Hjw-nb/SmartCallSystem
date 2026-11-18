@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>终端调试日志</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", monospace;
+    background: #0b1220; color: #e8eefc; padding: 16px;
+  }
+  h1 { font-size: 18px; margin-bottom: 12px; color: #38bdf8; }
+  .bar { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
+  .bar button {
+    padding: 6px 14px; border: 1px solid #24344f; border-radius: 8px;
+    background: #151f33; color: #e8eefc; cursor: pointer; font-size: 13px;
+  }
+  .bar button:hover { background: #1e2d47; }
+  .bar .info { font-size: 12px; color: #8fa4c4; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th, td { padding: 6px 8px; text-align: left; border-bottom: 1px solid #24344f; white-space: nowrap; }
+  th { color: #8fa4c4; font-weight: 600; position: sticky; top: 0; background: #0b1220; }
+  tr:hover { background: #151f33; }
+  .key { color: #38bdf8; font-weight: 700; }
+  .ok { color: #22c55e; }
+  .err { color: #ef4444; }
+  .warn { color: #f59e0b; }
+  .num { font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<h1>终端按键调试日志</h1>
+<div class="bar">
+  <button onclick="load()">刷新</button>
+  <button onclick="clearLog()">清空日志</button>
+  <span class="info" id="info">加载中…</span>
+  <span class="info">每 3 秒自动刷新</span>
+</div>
+<div style="overflow-x:auto">
+<table>
+  <thead>
+    <tr>
+      <th>时间</th><th>按键</th><th>当前号</th><th>本地等候</th><th>本地过号</th>
+      <th>队列数</th><th>最大序号</th><th>HTTP状态</th><th>WiFi</th>
+      <th>服务端等候</th><th>服务端过号</th><th>服务端在线</th>
+    </tr>
+  </thead>
+  <tbody id="tbody"></tbody>
+</table>
+</div>
+
+<script>
+var HTTP_STATES = ['IDLE','CIPSTART','CIPSEND','DATA','CLOSE'];
+
+function esc(s) {
+  var d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function stateName(s) {
+  return HTTP_STATES[s] || ('?' + s);
+}
+
+function stateClass(s) {
+  return s === 0 ? 'ok' : 'warn';
+}
+
+function wifiClass(w) {
+  return w ? 'ok' : 'err';
+}
+
+function load() {
+  fetch('/api/device/debug?limit=100', { cache: 'no-store' })
+    .then(function(r) { return r.json(); })
+    .then(function(list) {
+      var html = '';
+      for (var i = 0; i < list.length; i++) {
+        var d = list[i];
+        html += '<tr>' +
+          '<td>' + esc(d._ts || '-') + '</td>' +
+          '<td class="key">' + esc(d.key || '-') + '</td>' +
+          '<td>' + esc(d.cur || '-') + '</td>' +
+          '<td class="num">' + (d.wait != null ? d.wait : '-') + '</td>' +
+          '<td class="num">' + (d.passed != null ? d.passed : '-') + '</td>' +
+          '<td class="num">' + (d.count != null ? d.count : '-') + '</td>' +
+          '<td class="num">' + (d.max_seq != null ? d.max_seq : '-') + '</td>' +
+          '<td class="' + stateClass(d.http_state) + '">' + stateName(d.http_state) + '</td>' +
+          '<td class="' + wifiClass(d.wifi) + '">' + (d.wifi ? '连接' : '断开') + '</td>' +
+          '<td class="num">' + (d.srv_wait != null ? d.srv_wait : '-') + '</td>' +
+          '<td class="num">' + (d.srv_pass != null ? d.srv_pass : '-') + '</td>' +
+          '<td class="' + (d.srv_online ? 'ok' : 'err') + '">' + (d.srv_online ? '在线' : '离线') + '</td>' +
+          '</tr>';
+      }
+      document.getElementById('tbody').innerHTML = html || '<tr><td colspan="12" style="color:#8fa4c4">暂无数据</td></tr>';
+      document.getElementById('info').textContent = '共 ' + list.length + ' 条记录';
+    })
+    .catch(function(e) {
+      document.getElementById('info').textContent = '加载失败: ' + e;
+    });
+}
+
+function clearLog() {
+  if (!confirm('确定清空调试日志？')) return;
+  fetch('/api/device/debug/clear', { method: 'POST' })
+    .then(function() { load(); });
+}
+
+load();
+setInterval(load, 3000);
+</script>
+</body>
+</html>

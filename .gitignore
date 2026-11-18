@@ -1,0 +1,46 @@
+# Keil MDK 构建产物
+SmartCallSystem/MDK-ARM/SmartCallSystem/
+SmartCallSystem/MDK-ARM/DebugConfig/
+SmartCallSystem/MDK-ARM/RTE/
+
+# 与工程无关的 CMSIS 示例、预编译库和文档（体积大且不参与编译）
+SmartCallSystem/Drivers/CMSIS/DSP/
+SmartCallSystem/Drivers/CMSIS/Lib/
+SmartCallSystem/Drivers/CMSIS/NN/
+SmartCallSystem/Drivers/CMSIS/RTOS/
+SmartCallSystem/Drivers/CMSIS/RTOS2/
+SmartCallSystem/Drivers/CMSIS/Core_A/
+SmartCallSystem/Drivers/CMSIS/docs/
+SmartCallSystem/Drivers/STM32F1xx_HAL_Driver/*.chm
+SmartCallSystem/MDK-ARM/JLinkLog.txt
+*.uvguix.*
+*.dep
+*.crf
+*.axf
+*.hex
+*.bin
+*.map
+*.o
+*.d
+*.lst
+*.lnp
+*.htm
+
+# 运行日志与数据库
+debug.log
+server/debug.log
+server/queue.db
+server/*.db-journal
+
+# Python
+__pycache__/
+*.pyc
+
+# Office 临时锁文件
+~$*
+
+# 临时截图与系统文件
+.screenshots/
+Thumbs.db
+Desktop.ini
+*.jlink
